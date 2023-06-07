@@ -1,0 +1,6 @@
+export { default as Hero } from './hero'
+export { default as Misi } from './misi'
+export { default as PemDistribusi } from './pem-distribusi'
+export { default as PemProduksi } from './pem-produksi'
+export { default as Profile } from './profile'
+export { default as Visi } from './visi'
