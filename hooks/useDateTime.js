@@ -20,7 +20,7 @@ export const useDateTime = () => {
     const date = `${day}, ${today.getDate()} ${month} ${year}`;
 
     const hour = today.getHours();
-    const wish = `Good ${(hour < 12 && 'Morning') || (hour < 17 && 'Afternoon') || 'Evening'}, `;
+    const wish = `Selamat ${(hour < 10 && 'Pagi') || (hour < 16 && 'Siang') || (hour < 18 && 'Sore') || 'Malam'}`;
 
     const time = today.toLocaleTimeString(locale, { hour: 'numeric', hour12: true, minute: 'numeric' });
 

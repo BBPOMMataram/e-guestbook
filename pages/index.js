@@ -1,5 +1,4 @@
 import { PaperAirplaneIcon } from "@heroicons/react/20/solid";
-import { default as axio } from "axios";
 import Head from "next/head";
 import Image from "next/image";
 import { Fragment, useEffect } from "react";
@@ -8,7 +7,7 @@ import { toast } from "react-toastify";
 import Camera from "../components/camera";
 import axios from "../config/axios";
 import { useDateTime } from "../hooks/useDateTime";
-import { emptyGuestStates, fetchGuests, getAllGuestSijelapp, setAddress, setEmail, setFromInstansi, setGuestStates, setHp, setJabatan, setName, setPangkat, setService } from "../services/guest";
+import { emptyGuestStates, fetchGuests, getAllGuestSijelapp, setAddress, setEmail, setFromInstansi, setHp, setJabatan, setName, setPangkat, setService } from "../services/guest";
 
 export default function GuestBook() {
     const name = useSelector(state => state.guestReducer.name)
@@ -24,13 +23,14 @@ export default function GuestBook() {
     const items = useSelector(state => state.guestReducer.items)
 
     const dispatch = useDispatch()
+    const { date, time, wish } = useDateTime()
 
     useEffect(() => {
-        dispatch(getAllGuestSijelapp())
-        dispatch(fetchGuests('guest-book'))
+        dispatch(getAllGuestSijelapp()) // filling dataset in field name for guest of sijelapp (pembawa sampel)
+
+        dispatch(fetchGuests('guest-book')) // filling dataset in field name for guest
     }, [dispatch])
 
-    const { date, time, wish } = useDateTime()
 
     const submitHandler = (e) => {
         e.preventDefault()
@@ -48,6 +48,7 @@ export default function GuestBook() {
         guest.append('name', name)
         guest.append('company', fromInstansi)
         guest.append('hp', hp)
+        // guest.append('service', services.filter(i => i.id == service)[0].name)
         guest.append('service', service)
         guest.append('address', address)
         guest.append('email', email)
@@ -60,26 +61,12 @@ export default function GuestBook() {
 
         guest.append('selfie', blobSelfie)
 
-        axios.post('guest-book',
-            guest)
-            .then(({ data }) => {
-                toast.success(`Selamat datang ${data.data.name}, terima kasih telah berkunjung !`)
-                axio.post(`${process.env.NEXT_PUBLIC_SIJELAPP_URL_API}/notif`, {
-                    nama: name,
-                    instansi: fromInstansi,
-                    hp,
-                    layanan: services.filter(i => i.id == service)[0].name,
-                    alamat: address,
-                    email,
-                    pangkat,
-                    jabatan
-                })
-                dispatch(emptyGuestStates())
-            })
-            .catch(error => {
-                console.log(error)
-            })
-
+        axios.post(`guestbook`,
+            guest
+        ).then(({ data }) => {
+            toast.success(`Selamat datang ${data.data.name}, terima kasih telah berkunjung !`)
+            dispatch(emptyGuestStates())
+        })
     }
 
     const services = [
@@ -126,7 +113,14 @@ export default function GuestBook() {
         if (value) {
             axios(`guest-book/search/${value}`)
                 .then(({ data }) => {
-                    dispatch(setGuestStates(data))
+                    // dispatch(setGuestStates(data))
+                    data.service && dispatch(setService(data.service));
+                    data.hp && dispatch(setHp(data.hp));
+                    data.company && dispatch(setFromInstansi(data.company));
+                    data.address && dispatch(setAddress(data.address));
+                    data.email && dispatch(setEmail(data.email));
+                    data.pangkat && dispatch(setPangkat(data.pangkat));
+                    data.jabatan && dispatch(setJabatan(data.jabatan));
                 })
                 .catch(err => console.log(err))
         }
@@ -140,11 +134,11 @@ export default function GuestBook() {
             </Head>
 
             <main className="font-serif">
-                <div className="flex justify-evenly items-center bg-sky-100 p-5 shadow-md">
+                <div className="flex justify-evenly items-center bg-sky-100 p-5 shadow-md text-teal-900">
                     <div className="logo">
-                        <Image src={'/images/logo.png'} alt="Logo BPOM" width={120} height={120} />
+                        <Image src={'/images/logo.webp'} alt="Logo BPOM" width={120} height={120} priority={true} />
                     </div>
-                    <div className="title text-teal-900">
+                    <div className="title">
                         <h1 className="text-center p-2 mt-2 text-xl font-bold">BUKU TAMU</h1>
                         <p className="text-center text-xl">Balai Besar POM di Mataram</p>
                         <p className="text-center text-sm">Jln. Caturwarga - Mataram</p>
@@ -152,6 +146,7 @@ export default function GuestBook() {
                     <div className="datetime">
                         <div className="text-center">{`${date}`}</div>
                         <div className="text-center">{time}</div>
+                        <div className="text-center text-lg mt-4 font-bold">{wish}</div>
                     </div>
                 </div>
                 <div className="content ml-2">
@@ -170,7 +165,8 @@ export default function GuestBook() {
                                 </div>
                                 <div className="group-input flex flex-col">
                                     <label className="capitalize" htmlFor="layanan">layanan <span className="text-red-600">*</span></label>
-                                    <select className="appearance-none bg-transparent border-b border-teal-700 focus:outline-none p-2" name="layanan" id="layanan" value={service} onChange={(e) => dispatch(setService(e.target.value))}>
+                                    <select className="appearance-none bg-transparent border-b border-teal-700 focus:outline-none focus:bg-sky-100 p-2"
+                                        name="layanan" id="layanan" value={service} onChange={(e) => dispatch(setService(e.target.value))}>
                                         <option key='0' value='0'>==Pilih layanan==</option>
                                         {services.map(service =>
                                             <option key={service.id} value={service.id}>{service.name}</option>
