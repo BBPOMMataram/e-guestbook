@@ -1,7 +1,7 @@
 import { PaperAirplaneIcon } from "@heroicons/react/20/solid";
 import Head from "next/head";
 import Image from "next/image";
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Camera from "../components/camera";
@@ -22,18 +22,84 @@ export default function GuestBook() {
     const guestSijelapp = useSelector(state => state.guestReducer.itemsSijelapp)
     const items = useSelector(state => state.guestReducer.items)
 
+    const [officePointLocation] = useState({ lat: -8.587723, long: 116.116029 })
+    const [userLocation, setUserLocation] = useState({ lat: null, long: null })
+
     const dispatch = useDispatch()
     const { date, time, wish } = useDateTime()
 
     useEffect(() => {
         dispatch(getAllGuestSijelapp()) // filling dataset in field name for guest of sijelapp (pembawa sampel)
 
-        dispatch(fetchGuests('guest-book')) // filling dataset in field name for guest
+        dispatch(fetchGuests('/api/guest-book')) // filling dataset in field name for guest
+        getLocation()
+
     }, [dispatch])
 
+    // GEO LOCATION
+    // const x = document.getElementById("demo");
+
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        } else {
+            toast.error("Geolocation is not supported by this browser.")
+        }
+    }
+
+    function showPosition(position) {
+        setUserLocation({
+            lat: position.coords.latitude,
+            long: position.coords.longitude
+        })
+    }
+
+    function showError(error) {
+        switch (error.code) {
+            case error.PERMISSION_DENIED:
+                console.log("User denied the request for Geolocation.")
+                break;
+            case error.POSITION_UNAVAILABLE:
+                console.log("Location information is unavailable.")
+                break;
+            case error.TIMEOUT:
+                console.log("The request to get user location timed out.")
+                break;
+            case error.UNKNOWN_ERROR:
+                console.log("An unknown error occurred.")
+                break;
+        }
+    }
+    // END GEO LOCATION
+
+    // MENGHITUNG JARAK USER DENGAN FRONT OFFICE
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // Radius bumi dalam kilometer
+        const dLat = toRadians(lat2 - lat1);
+        const dLon = toRadians(lon2 - lon1);
+
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c * 1000; // Jarak dalam meter
+
+        return distance;
+    }
+
+    function toRadians(degrees) {
+        return degrees * Math.PI / 180;
+    }
 
     const submitHandler = (e) => {
         e.preventDefault()
+
+        getLocation()
+
+        if (userLocation.lat === null) {
+            return toast.error('Lokasi tidak ditemukan, aktifkan GPS !')
+        }
 
         if (!name || !hp || !service) {
             return toast.error('Tolong lengkapi form dulu !')
@@ -46,6 +112,20 @@ export default function GuestBook() {
 
         if (!selfie) {
             return toast.error('Foto dulu dong !')
+        }
+
+        const distance = haversineDistance(
+            officePointLocation.lat,
+            officePointLocation.long,
+            userLocation.lat,
+            userLocation.long
+        ).toFixed(0)
+
+        const isOutOfLocation = distance > 10
+
+        if (isOutOfLocation) {
+            console.log('distance: ', distance);
+            return toast.error('Mendekat ke front office !')
         }
 
         const guest = new FormData()
@@ -66,7 +146,7 @@ export default function GuestBook() {
 
         guest.append('selfie', blobSelfie)
 
-        axios.post(`guestbook`,
+        axios.post(`/api/guestbook`,
             guest
         ).then(({ data }) => {
             toast.success(`Selamat datang ${data.data.name}, terima kasih telah berkunjung !`)
@@ -116,7 +196,7 @@ export default function GuestBook() {
 
     const autoFill = (value) => {
         if (value) {
-            axios(`guest-book/search/${value}`)
+            axios(`/api/guest-book/search/${value}`)
                 .then(({ data }) => {
                     // dispatch(setGuestStates(data))
                     data.service && dispatch(setService(data.service));

@@ -97,7 +97,7 @@ export default guestSlice.reducer
 
 export function getAllGuestSijelapp() {
     return async (dispatch) => {
-        axios('guest-sijelapp')
+        axios('/api/guest-sijelapp')
             .then(({ data }) => {
                 dispatch(setItemsSijelapp(data));
             })
