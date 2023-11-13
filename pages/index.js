@@ -39,6 +39,11 @@ export default function GuestBook() {
             return toast.error('Tolong lengkapi form dulu !')
         }
 
+        var phoneRules = /^(0|62|\+62)[0-9]{9,11}$/; //digits 10 - 12
+        if (!phoneRules.test(hp)) {
+            return toast.error('No HP tidak valid!');
+        }
+
         if (!selfie) {
             return toast.error('Foto dulu dong !')
         }
