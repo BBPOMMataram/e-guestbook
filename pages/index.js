@@ -1,4 +1,4 @@
-import { PaperAirplaneIcon } from "@heroicons/react/20/solid";
+import { CubeTransparentIcon, PaperAirplaneIcon } from "@heroicons/react/20/solid";
 import Head from "next/head";
 import Image from "next/image";
 import { Fragment, useEffect, useState } from "react";
@@ -24,6 +24,7 @@ export default function GuestBook() {
 
     const [officePointLocation] = useState({ lat: -8.587723, long: 116.116029 })
     const [userLocation, setUserLocation] = useState({ lat: null, long: null })
+    const [isLoading, setIsLoading] = useState(false)
 
     const dispatch = useDispatch()
     const { date, time, wish } = useDateTime()
@@ -37,7 +38,6 @@ export default function GuestBook() {
     }, [dispatch])
 
     // GEO LOCATION
-    // const x = document.getElementById("demo");
 
     function getLocation() {
         if (navigator.geolocation) {
@@ -94,23 +94,27 @@ export default function GuestBook() {
 
     const submitHandler = (e) => {
         e.preventDefault()
-
+        setIsLoading(true)
         getLocation()
 
         if (userLocation.lat === null) {
+            setIsLoading(false)
             return toast.error('Lokasi tidak ditemukan, aktifkan GPS !')
         }
 
         if (!name || !hp || !service) {
+            setIsLoading(false)
             return toast.error('Tolong lengkapi form dulu !')
         }
 
         var phoneRules = /^(0|62|\+62)[0-9]{9,11}$/; //digits 10 - 12
         if (!phoneRules.test(hp)) {
+            setIsLoading(false)
             return toast.error('No HP tidak valid!');
         }
 
         if (!selfie) {
+            setIsLoading(false)
             return toast.error('Foto dulu dong !')
         }
 
@@ -125,6 +129,7 @@ export default function GuestBook() {
 
         if (isOutOfLocation) {
             console.log('distance: ', distance);
+            setIsLoading(false)
             return toast.error('Mendekat ke front office !')
         }
 
@@ -149,6 +154,7 @@ export default function GuestBook() {
         axios.post(`/api/guestbook`,
             guest
         ).then(({ data }) => {
+            setIsLoading(false)
             toast.success(`Selamat datang ${data.data.name}, terima kasih telah berkunjung !`)
             dispatch(emptyGuestStates())
         })
@@ -305,7 +311,11 @@ export default function GuestBook() {
                                 </div>
                             </div>
                         </div>
-                        <button className="bg-bpom-b text-white py-2 pl-6 pr-4 ml-2 rounded" onClick={e => submitHandler(e)}>Simpan <PaperAirplaneIcon width={25} className="inline ml-2" /></button>
+                        <button className="bg-bpom-b text-white py-2 pl-6 pr-4 ml-2 rounded"
+                            onClick={e => submitHandler(e)}
+                            disabled={isLoading ? true : false}
+                        >
+                            Simpan {isLoading ? <CubeTransparentIcon width={25} className="inline ml-2 animate-spin" /> : <PaperAirplaneIcon width={25} className="inline ml-2" />}</button>
                     </form>
                 </div>
             </main>
