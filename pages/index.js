@@ -128,9 +128,13 @@ export default function GuestBook() {
         const isOutOfLocation = distance > 10
 
         if (isOutOfLocation) {
+            console.log('officePointLocation: ',officePointLocation)
+            console.log('userLocation: ',userLocation)
             console.log('distance: ', distance);
             setIsLoading(false)
-            return toast.error('Mendekat ke front office !')
+            toast.error('Mendekat ke pintu depan kantor !')
+            toast.warning('distance: '+ distance);
+            return
         }
 
         const guest = new FormData()
