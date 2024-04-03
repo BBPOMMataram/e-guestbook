@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import Camera from "../components/camera";
 import axios from "../config/axios";
 import { useDateTime } from "../hooks/useDateTime";
-import { emptyGuestStates, fetchGuests, getAllGuestSijelapp, setAddress, setEmail, setFromInstansi, setHp, setJabatan, setName, setPangkat, setService } from "../services/guest";
+import { emptyGuestStates, fetchGuests, setAddress, setEmail, setFromInstansi, setHp, setJabatan, setName, setPangkat, setService } from "../services/guest";
 
 export default function GuestBook() {
     const name = useSelector(state => state.guestReducer.name)
@@ -30,9 +30,9 @@ export default function GuestBook() {
     const { date, time, wish } = useDateTime()
 
     useEffect(() => {
-        dispatch(getAllGuestSijelapp()) // filling dataset in field name for guest of sijelapp (pembawa sampel)
+        // dispatch(getAllGuestSijelapp()) // filling dataset in field name for guest of sijelapp (pembawa sampel)
 
-        dispatch(fetchGuests('/api/guest-book')) // filling dataset in field name for guest
+        dispatch(fetchGuests('/api/all-guests')) // filling dataset in field name for guest
         getLocation()
 
     }, [dispatch])
@@ -95,12 +95,12 @@ export default function GuestBook() {
     const submitHandler = (e) => {
         e.preventDefault()
         setIsLoading(true)
-        getLocation()
+        // getLocation()
 
-        if (userLocation.lat === null) {
-            setIsLoading(false)
-            return toast.error('Lokasi tidak ditemukan, aktifkan GPS !')
-        }
+        // if (userLocation.lat === null) {
+        //     setIsLoading(false)
+        //     return toast.error('Lokasi tidak ditemukan, aktifkan GPS !')
+        // }
 
         if (!name || !hp || !service) {
             setIsLoading(false)
@@ -127,15 +127,15 @@ export default function GuestBook() {
 
         const isOutOfLocation = distance > 10
 
-        if (isOutOfLocation) {
-            console.log('officePointLocation: ',officePointLocation)
-            console.log('userLocation: ',userLocation)
-            console.log('distance: ', distance);
-            setIsLoading(false)
-            toast.error('Mendekat ke pintu depan kantor !')
-            toast.warning('distance: '+ distance);
-            return
-        }
+        // if (isOutOfLocation) {
+        //     console.log('officePointLocation: ',officePointLocation)
+        //     console.log('userLocation: ',userLocation)
+        //     console.log('distance: ', distance);
+        //     setIsLoading(false)
+        //     toast.error('Mendekat ke pintu depan kantor !')
+        //     toast.warning('distance: '+ distance);
+        //     return
+        // }
 
         const guest = new FormData()
 
@@ -155,7 +155,7 @@ export default function GuestBook() {
 
         guest.append('selfie', blobSelfie)
 
-        axios.post(`/api/guestbook`,
+        axios.post(`/api/new-guest`,
             guest
         ).then(({ data }) => {
             setIsLoading(false)

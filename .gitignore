@@ -37,3 +37,4 @@ next-env.d.ts
 pages/testing.js
 etamu.zip
 .next.zip
+.vscode/*
